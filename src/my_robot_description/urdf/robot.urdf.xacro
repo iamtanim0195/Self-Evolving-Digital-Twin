@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot_car">
+
+    <link name="base_link"></link>
+
+    <xacro:include filename="description/chassis.xacro" />
+    <xacro:include filename="description/wheels.xacro" />
+    <xacro:include filename="description/sensors.xacro" />
+
+</robot>
