@@ -29,7 +29,7 @@ def generate_launch_description():
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')]),
-        launch_arguments={'gz_args': f'-r {world_file}'}.items()
+        launch_arguments={'gz_args': ['-r ', world_file]}.items()
     )
 
     # 4. Node to spawn the robot entity inside the Gazebo world
@@ -40,17 +40,16 @@ def generate_launch_description():
         output='screen'
     )
 
-    # 5. Professional Bridge Node (Handles Keyboard control, Camera feed, and MPU data in one bridge)
+    # 5. Professional Bridge Node (FIXED SYNTAX FOR HARMONIC BRIDGE)
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
-            # Motor control bridge (/cmd_vel)
-            '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
-            # Odometry tracking bridge (/odom)
-            '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-            # MPU6050 / IMU sensor bridge (/imu)
-            '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU'
+            # ROS 2 -> Gazebo (cmd_vel এর জন্য @ দ্বিমুখী বা [ চিহ্নের সঠিক ম্যাপিং)
+            '/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist',
+            # Gazebo -> ROS 2 (odom এবং imu ডেটা পারাপার)
+            '/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry',
+            '/imu@sensor_msgs/msg/Imu@gz.msgs.IMU'
         ],
         output='screen'
     )
@@ -59,5 +58,5 @@ def generate_launch_description():
         gazebo,
         node_robot_state_publisher,
         spawn_entity,
-        bridge  # Unified communication bridge added here
+        bridge  
     ])

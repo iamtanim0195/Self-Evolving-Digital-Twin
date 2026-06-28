@@ -6,42 +6,28 @@ import time
 class RobotActionController(Node):
     def __init__(self):
         super().__init__('robot_action_controller')
-        # /cmd_vel টপিক পাবলিশ করার জন্য পাবলিশার তৈরি
         self.publisher_ = self.create_publisher(Twist, '/cmd_vel', 10)
-        self.get_logger().info('Robot Action Controller Node has been started!')
+        self.get_logger().info('Robot Continuous Action Controller Node has been started!')
 
-    def move_forward(self):
+    def drive_robot(self, linear_x, angular_z, duration):
+        """নির্দিষ্ট সময় ধরে লুপ আকারে অনবরত সিগন্যাল পাঠানোর মেথড"""
         msg = Twist()
-        msg.linear.x = 0.5   # Positive velocity to move ahead
-        msg.angular.z = 0.0
-        self.publisher_.publish(msg)
-        self.get_logger().info('Action: Moving Forward')
-
-    def move_backward(self):
-        msg = Twist()
-        msg.linear.x = -0.5  # Negative velocity to reverse
-        msg.angular.z = 0.0
-        self.publisher_.publish(msg)
-        self.get_logger().info('Action: Moving Backward')
-
-    def turn_left(self):
-        msg = Twist()
-        msg.linear.x = 0.0
-        msg.angular.z = 1.0  # Positive angular velocity rotates counter-clockwise
-        self.publisher_.publish(msg)
-        self.get_logger().info('Action: Turning Left')
-
-    def turn_right(self):
-        msg = Twist()
-        msg.linear.x = 0.0
-        msg.angular.z = -1.0 # Negative angular velocity rotates clockwise
-        self.publisher_.publish(msg)
-        self.get_logger().info('Action: Turning Right')
+        msg.linear.x = linear_x
+        msg.angular.z = angular_z
+        
+        start_time = time.time()
+        # নির্দিষ্ট duration শেষ না হওয়া পর্যন্ত প্রতি ০.১ সেকেন্ড পর পর সিগন্যাল পাঠাবে
+        while (time.time() - start_time) < duration:
+            self.publisher_.publish(msg)
+            time.sleep(0.1)
+            
+        # সময় শেষ হলে গাড়ি থামিয়ে দেবে
+        self.stop_robot()
 
     def stop_robot(self):
         msg = Twist()
         msg.linear.x = 0.0
-        msg.angular.z = 0.0  # Zero resets all motor speeds
+        msg.angular.z = 0.0
         self.publisher_.publish(msg)
         self.get_logger().info('Action: Robot Stopped')
 
@@ -50,10 +36,10 @@ def main(args=None):
     node = RobotActionController()
     
     try:
-        # টেস্ট রান: গাড়িটি ৩ সেকেন্ড সামনে গিয়ে থেমে যাবে
-        node.move_forward()
-        time.sleep(3.0)
-        node.stop_robot()
+        # ৩ সেকেন্ডের জন্য ১.০ স্পিডে সামনে ড্রাইভ করবে (স্পিড একটু বাড়িয়ে দেওয়া হয়েছে)
+        node.get_logger().info('Action: Moving Forward continuously for 3 seconds...')
+        node.drive_robot(linear_x=1.0, angular_z=0.0, duration=3.0)
+        
     except KeyboardInterrupt:
         node.stop_robot()
     finally:
